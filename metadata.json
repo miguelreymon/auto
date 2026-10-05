@@ -1,0 +1,6 @@
+{
+  "name": "AutoPubli 24/7 - Auto-Publicador de Anuncios Adultos",
+  "description": "Herramienta automatizada para publicar anuncios en páginas de contactos y foros de adultos cada 20 minutos en piloto automático.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
