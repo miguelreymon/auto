@@ -6,11 +6,7 @@ import {
   MapPin, 
   MessageCircle, 
   Phone, 
-  Globe2, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  ShieldCheck
+  Lock
 } from 'lucide-react';
 
 interface PositionRadarSectionProps {
@@ -66,13 +62,12 @@ export const PositionRadarSection: React.FC<PositionRadarSectionProps> = ({
   const [scanStep, setScanStep] = useState(0);
   const [portalsList, setPortalsList] = useState<ScanResult[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [revealedAds, setRevealedAds] = useState<Record<string, boolean>>({});
 
   const scanSteps = [
     'Conectando en tiempo real con MilPasiones y PasiónValencia...',
     'Rastreando listados, categorías y páginas simultáneas...',
     'Localizando anuncio(s) activos asociados a tu teléfono...',
-    'Verificando logos, puestos exactos y presencia multicanal...',
+    'Verificando logos oficiales y presencia multicanal...',
   ];
 
   const handleScan = async (overridePhone?: string) => {
@@ -87,7 +82,6 @@ export const PositionRadarSection: React.FC<PositionRadarSectionProps> = ({
     setPortalsList([]);
     setIsScanning(true);
     setScanStep(0);
-    setRevealedAds({});
 
     const stepInterval = setInterval(() => {
       setScanStep((prev) => (prev < 3 ? prev + 1 : prev));
@@ -160,14 +154,9 @@ export const PositionRadarSection: React.FC<PositionRadarSectionProps> = ({
     }
   };
 
-  const toggleRevealAd = (id: string) => {
-    setRevealedAds(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
   // Helper para censurar parcialmente el título para que el anunciante lo reconozca pero se mantenga la privacidad
-  const formatCensoredTitle = (title: string, isRevealed: boolean) => {
+  const formatCensoredTitle = (title: string) => {
     if (!title) return 'Anuncio verificado [Censurado por privacidad]';
-    if (isRevealed) return title;
     
     const words = title.trim().split(/\s+/);
     if (words.length <= 2) {
@@ -412,13 +401,6 @@ export const PositionRadarSection: React.FC<PositionRadarSectionProps> = ({
                           <span className="text-emerald-700 font-semibold">Subido: {portal.lastEditedTime}</span>
                         </div>
 
-                        {portal.hasVipPlacement && (
-                          <div className="mt-1">
-                            <span className="inline-flex items-center gap-1 text-[10px] bg-purple-50 text-purple-700 font-semibold px-2 py-0.5 rounded-md border border-purple-200">
-                              ★ Anuncio en ranking estándar + presencia VIP
-                            </span>
-                          </div>
-                        )}
                       </div>
                     </div>
 
@@ -448,105 +430,72 @@ export const PositionRadarSection: React.FC<PositionRadarSectionProps> = ({
 
                         {/* Listado de todos los anuncios adicionales en modo censurado */}
                         <div className="space-y-3">
-                          {portal.additionalAds.map((ad, aIdx) => {
-                            const adKey = `${portal.portalId}-${aIdx}`;
-                            const isRevealed = Boolean(revealedAds[adKey]);
-
-                            return (
-                              <div
-                                key={aIdx}
-                                className="bg-white rounded-xl p-3 border border-slate-200 shadow-2xs relative overflow-hidden transition-all hover:border-slate-300"
-                              >
-                                <div className="flex items-start gap-3">
-                                  {/* Imagen Censurada (Efecto Blur que deja intuir la foto real) */}
-                                  <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
-                                    {ad.image ? (
-                                      <img
-                                        src={ad.image}
-                                        alt="Anuncio adicional verificado"
-                                        className={`w-full h-full object-cover transition-all ${
-                                          isRevealed ? 'filter-none' : 'filter blur-[5px] scale-110'
-                                        }`}
-                                      />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center bg-slate-200">
-                                        <Phone className="w-5 h-5 text-slate-400" />
-                                      </div>
-                                    )}
-
-                                    {!isRevealed && (
-                                      <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-white">
-                                        <Lock className="w-4 h-4 drop-shadow-md text-amber-300 mb-0.5" />
-                                        <span className="text-[8px] font-black tracking-wider uppercase bg-black/60 px-1 rounded">
-                                          CENSURADO
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Título & Datos Censurados */}
-                                  <div className="flex-1 overflow-hidden">
-                                    <div className="flex items-center justify-between gap-1 mb-1">
-                                      <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
-                                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                                        <span className="truncate">{ad.city || portal.city}</span>
-                                      </span>
-                                      {ad.rank && (
-                                        <span className="font-mono text-[10px] font-bold bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">
-                                          Puesto #{ad.rank}
-                                        </span>
-                                      )}
+                          {portal.additionalAds.map((ad, aIdx) => (
+                            <div
+                              key={aIdx}
+                              className="bg-white rounded-xl p-3 border border-slate-200 shadow-2xs relative overflow-hidden transition-all hover:border-slate-300"
+                            >
+                              <div className="flex items-start gap-3">
+                                {/* Imagen Censurada (Efecto Blur que deja intuir la foto real) */}
+                                <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
+                                  {ad.image ? (
+                                    <img
+                                      src={ad.image}
+                                      alt="Anuncio adicional verificado"
+                                      className="w-full h-full object-cover filter blur-[5px] scale-110"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-slate-200">
+                                      <Phone className="w-5 h-5 text-slate-400" />
                                     </div>
+                                  )}
 
-                                    {/* Título censurado para verificación del anunciante */}
-                                    <p className="font-['Outfit',sans-serif] font-bold text-slate-900 text-xs leading-snug mb-1">
-                                      {formatCensoredTitle(ad.title, isRevealed)}
-                                    </p>
-
-                                    <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
-                                      <span className="font-mono font-semibold text-slate-700">
-                                        {formatCensoredPhone(phoneNumber)}
-                                      </span>
-                                      <span>·</span>
-                                      <span>{ad.lastEditedTime || 'Activo en el portal'}</span>
-                                    </div>
+                                  <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-white">
+                                    <Lock className="w-4 h-4 drop-shadow-md text-amber-300 mb-0.5" />
+                                    <span className="text-[8px] font-black tracking-wider uppercase bg-black/60 px-1 rounded">
+                                      CENSURADO
+                                    </span>
                                   </div>
                                 </div>
 
-                                {/* Botón para que la propietaria pueda previsualizar su texto */}
-                                <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleRevealAd(adKey)}
-                                    className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-800 font-semibold cursor-pointer"
-                                  >
-                                    {isRevealed ? (
-                                      <>
-                                        <EyeOff className="w-3 h-3" />
-                                        <span>Ocultar censura</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Eye className="w-3 h-3" />
-                                        <span>¿Es tu anuncio? Revelar vista previa</span>
-                                      </>
-                                    )}
-                                  </button>
+                                {/* Título & Datos Censurados */}
+                                <div className="flex-1 overflow-hidden">
+                                  <div className="flex items-center justify-between gap-1 mb-1">
+                                    <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+                                      <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                                      <span className="truncate">{ad.city || portal.city}</span>
+                                    </span>
+                                  </div>
 
-                                  {ad.url && (
-                                    <a
-                                      href={ad.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-emerald-700 hover:underline font-bold flex items-center gap-1"
-                                    >
-                                      <span>Ver anuncio ↗</span>
-                                    </a>
-                                  )}
+                                  {/* Título censurado para verificación del anunciante */}
+                                  <p className="font-['Outfit',sans-serif] font-bold text-slate-900 text-xs leading-snug mb-1">
+                                    {formatCensoredTitle(ad.title)}
+                                  </p>
+
+                                  <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
+                                    <span className="font-mono font-semibold text-slate-700">
+                                      {formatCensoredPhone(phoneNumber)}
+                                    </span>
+                                    <span>·</span>
+                                    <span>{ad.lastEditedTime || 'Activo en el portal'}</span>
+                                  </div>
                                 </div>
                               </div>
-                            );
-                          })}
+
+                              {ad.url && (
+                                <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-end text-[11px]">
+                                  <a
+                                    href={ad.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-emerald-700 hover:underline font-bold flex items-center gap-1"
+                                  >
+                                    <span>Ver anuncio ↗</span>
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ) : (
@@ -572,7 +521,7 @@ export const PositionRadarSection: React.FC<PositionRadarSectionProps> = ({
                       type="button"
                       onClick={() => {
                         if (onOpenWhatsApp) {
-                          onOpenWhatsApp(`Hola, he comprobado mi teléfono (${phoneNumber}) en ${portal.portalName} y está en el puesto #${portal.rank}. Quiero que AutoPubli 24/7 suba todos mis anuncios de este portal al puesto #1 cada 20 min.`);
+                          onOpenWhatsApp(`Hola, he comprobado mi teléfono (${phoneNumber}) en ${portal.portalName}. Quiero que AutoPubli 24/7 renueve todos mis anuncios automáticamente cada 20 min.`);
                         }
                       }}
                       className="text-emerald-700 hover:text-emerald-800 font-bold underline cursor-pointer"
