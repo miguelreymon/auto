@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /autoadmin
+
+Sitemap: https://www.autopubli24.com/sitemap.xml
