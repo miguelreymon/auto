@@ -184,7 +184,7 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
 
   const handleContactWhatsApp = (cityName?: string, packLabel?: string) => {
     const city = cityName || selectedCityForInquiry || 'mi ciudad';
-    const pack = packLabel || '1 Ciudad Exclusiva (490€)';
+    const pack = packLabel || '1 Ciudad Exclusiva';
 
     const price = 490;
     trackXWhatsAppPurchase({
@@ -192,7 +192,7 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
       value: price,
     });
 
-    const msg = `¡Hola Lorena! Me interesa comprar la herramienta completa AutoPubli 24/7 en exclusividad para ${city} (${pack}). ¿Sigue disponible la plaza para bloquear mi zona y empezar?`;
+    const msg = `¡Hola Lorena! Me interesa conseguir la herramienta completa AutoPubli 24/7 en exclusividad para ${city}. ¿Sigue disponible la plaza para bloquear mi zona y ver cómo empezar?`;
     
     if (onOpenWhatsApp) {
       onOpenWhatsApp(msg);
@@ -375,7 +375,7 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 sm:px-9 py-4 bg-[#00a651] hover:bg-green-600 text-white font-black text-sm sm:text-base rounded-2xl shadow-xl shadow-green-600/30 transition-all cursor-pointer active:scale-95"
               >
                 <Zap className="w-5 h-5 fill-current text-yellow-300" />
-                <span>{showCityPricingSection ? 'VER LICENCIA PARA MI CIUDAD' : 'COMPROBAR SI MI CIUDAD ESTÁ LIBRE'}</span>
+                <span>COMPROBAR DISPONIBILIDAD ↓</span>
               </button>
             </div>
 
