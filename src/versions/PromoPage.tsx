@@ -9,7 +9,6 @@ import {
   Copy, 
   ArrowRight, 
   Sparkles, 
-  Download,
   Flame,
   Star,
   Globe,
@@ -17,7 +16,6 @@ import {
   RefreshCw,
   Layers,
   Tag,
-  Radar,
   HelpCircle,
   Hourglass
 } from 'lucide-react';
@@ -283,10 +281,6 @@ export const PromoPage: React.FC<PromoPageProps> = ({
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-700">
-            <a href="#radar-posicion" className="text-emerald-700 hover:text-[#00a651] transition-colors flex items-center gap-1.5 font-bold">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Radar de Posición</span>
-            </a>
             <a href="#como-funciona" className="hover:text-[#00a651] transition-colors">
               Cómo Funciona
             </a>
@@ -298,33 +292,10 @@ export const PromoPage: React.FC<PromoPageProps> = ({
             <a href="#oferta" className="hover:text-[#00a651] transition-colors">
               Precios
             </a>
-            <a
-              href="/ciudades"
-              onClick={(e) => {
-                if (onNavigateToCityLicense) {
-                  e.preventDefault();
-                  onNavigateToCityLicense();
-                }
-              }}
-              className="text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 shadow-2xs"
-              title="Comprar la herramienta con exclusividad para 1 o más ciudades"
-            >
-              <span>💼 Franquicia / Ciudades</span>
-            </a>
           </div>
 
           {/* Action Buttons: Resolver Duda (móvil y PC) y Activar Ahora */}
           <div className="flex items-center gap-2 sm:gap-2.5">
-            {onOpenExtensionModal && (
-              <button
-                onClick={onOpenExtensionModal}
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5 text-slate-500" />
-                <span>Extensión</span>
-              </button>
-            )}
-
             {/* Botón ¿Necesitas ayuda?: Sustituye a WhatsApp en PC y se añade en móvil */}
             <button
               onClick={onOpenDoubtModal || onOpenWhatsApp}

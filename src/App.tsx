@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Analytics } from '@vercel/analytics/react';
+const Analytics = () => null;
 import { PromoPage } from './versions/PromoPage';
 import { AffiliatesPage } from './versions/AffiliatesPage';
 import { CityLicensePage } from './versions/CityLicensePage';

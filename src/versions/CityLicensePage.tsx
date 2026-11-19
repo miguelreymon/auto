@@ -19,17 +19,18 @@ import {
   AlertCircle, 
   ChevronDown, 
   ChevronUp,
-  Globe2,
   Cpu,
-  Layers,
   Sparkles,
   Search,
   X,
   Bell,
-  Clock
+  Clock,
+  Star
 } from 'lucide-react';
 import { usePromoContent } from '../context/PromoContentContext';
 import { trackXWhatsAppPurchase } from '../lib/xPixel';
+import portadaAutoPubli24 from '../assets/images/portadaautopubli24.webp';
+import bizumLogo from '../assets/images/Bizum.png';
 
 interface CityLicensePageProps {
   onBackToHome?: () => void;
@@ -124,10 +125,33 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
   const { content } = usePromoContent();
 
   // Estados interactivos
-  const [selectedPack, setSelectedPack] = useState<'1city' | '2cities' | '3cities' | '5cities'>('1city');
+  const showCityPricingSection = false;
   const [searchCity, setSearchCity] = useState('');
-  const [selectedCityForInquiry, setSelectedCityForInquiry] = useState<string>('Valencia');
+  const [selectedCityForInquiry, setSelectedCityForInquiry] = useState<string>('');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [activeAdsCount, setActiveAdsCount] = useState(2380);
+
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+
+    const updateCount = () => {
+      setActiveAdsCount((prev) => {
+        const delta = Math.floor(Math.random() * (11 - 3 + 1)) + 3;
+        const goUp = prev < 2365 ? true : prev > 2415 ? false : Math.random() > 0.48;
+        return goUp ? prev + delta : prev - delta;
+      });
+    };
+
+    const initialTimeout = setTimeout(() => {
+      updateCount();
+      intervalId = setInterval(updateCount, 7000);
+    }, 2000);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
 
   // SEO
   useEffect(() => {
@@ -160,13 +184,9 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
 
   const handleContactWhatsApp = (cityName?: string, packLabel?: string) => {
     const city = cityName || selectedCityForInquiry || 'mi ciudad';
-    const pack = packLabel || (
-      selectedPack === '1city' ? '1 Ciudad Exclusiva (490€)' :
-      selectedPack === '2cities' ? '2 Ciudades (790€)' :
-      selectedPack === '3cities' ? '3 Ciudades (990€)' : 'Pack 5 Ciudades (1.490€)'
-    );
+    const pack = packLabel || '1 Ciudad Exclusiva (490€)';
 
-    const price = selectedPack === '1city' ? 490 : selectedPack === '2cities' ? 790 : selectedPack === '3cities' ? 990 : 1490;
+    const price = 490;
     trackXWhatsAppPurchase({
       planOrCity: `Licencia ${city} (${pack})`,
       value: price,
@@ -217,105 +237,42 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
 
   const isSelectedCityOccupied = selectedCityObj?.status === 'reservada';
 
-  // Filtrado de ciudades en el buscador (todas las 50 capitales de España + Ceuta y Melilla)
+  // Filtrado de ciudades en el buscador (solo cuando el usuario escribe)
   const filteredCities = useMemo(() => {
-    // Si el usuario escribe en el buscador, busca sobre todo el catálogo completo de capitales
-    if (searchCity.trim()) {
-      const q = normalizeText(searchCity);
-      return ALL_SPANISH_CITIES.filter(c => {
-        const nameNorm = normalizeText(c.name);
-        const provNorm = normalizeText(c.province);
-        return nameNorm.includes(q) || provNorm.includes(q);
-      }).sort((a, b) => {
-        const aStarts = normalizeText(a.name).startsWith(q);
-        const bStarts = normalizeText(b.name).startsWith(q);
-        if (aStarts && !bStarts) return -1;
-        if (!aStarts && bStarts) return 1;
-        return a.name.localeCompare(b.name);
-      });
-    }
-
-    // Por defecto en PC se muestran las 8 ciudades principales como salía antes
-    return ALL_SPANISH_CITIES.slice(0, 8);
+    if (!searchCity.trim()) return [];
+    const q = normalizeText(searchCity);
+    return ALL_SPANISH_CITIES.filter(c => {
+      const nameNorm = normalizeText(c.name);
+      const provNorm = normalizeText(c.province);
+      return nameNorm.includes(q) || provNorm.includes(q);
+    }).sort((a, b) => {
+      const aStarts = normalizeText(a.name).startsWith(q);
+      const bStarts = normalizeText(b.name).startsWith(q);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      return a.name.localeCompare(b.name);
+    });
   }, [searchCity]);
 
-  const packData = {
-    '1city': {
-      title: '1 Ciudad en Exclusiva',
-      badge: 'MÁS RECOMENDADO PARA EMPEZAR',
-      price: 490,
-      oldPrice: 850,
-      citiesCount: 1,
-      savings: 'Ahorras 360€ en implantación',
-      ideal: 'Para quien quiere dominar su ciudad local sin competencia y recuperar la inversión en <25 días.',
-      features: [
-        'Exclusividad territorial blindada para 1 ciudad',
-        'Panel de Control Total (añade, pausa y gestiona anunciantes)',
-        'Bots en servidores dedicados 24/7 (tú no necesitas ordenador encendido)',
-        'Cobras tú el 100% directo (Bizum, efectivo o transferencia)',
-        'Cero comisiones: todo lo que cobras a tus clientes es íntegro para ti',
-        'Radar de comprobación multicanal activo para tus clientes',
-        'Pack de Scripts y Mensajes de captación probados por WhatsApp',
-        'Mantenimiento y actualizaciones técnicas incluidas todo el año',
-      ]
-    },
-    '2cities': {
-      title: '2 Ciudades en Exclusiva',
-      badge: 'PACK DÚO PROVINCIAL',
-      price: 790,
-      oldPrice: 1350,
-      citiesCount: 2,
-      savings: 'Ahorras 560€ (Solo 395€/ciudad)',
-      ideal: 'Para quien opera en su ciudad y quiere sumar una ciudad vecina de alto volumen.',
-      features: [
-        'Exclusividad territorial blindada para 2 ciudades',
-        'Panel multi-ciudad unificado con selector rápido',
-        'Capacidad simultánea ampliada para cientos de publicaciones',
-        'Cobro del 100% de ambas ciudades directo a tus cuentas',
-        'Mismo sistema llave en mano sin saber programar',
-        'Radar de posiciones multicanal para ambas localidades',
-        'Soporte técnico directo preferente por WhatsApp',
-        'Garantía de no cesión a ningún otro competidor en tus 2 zonas',
-      ]
-    },
-    '3cities': {
-      title: '3 Ciudades en Exclusiva',
-      badge: 'PACK EXPANSIÓN REGIONAL',
-      price: 990,
-      oldPrice: 1950,
-      citiesCount: 3,
-      savings: 'Ahorras 960€ (Solo 330€/ciudad)',
-      ideal: 'Para operadores o personas con visión de agencia regional con alta facturación.',
-      features: [
-        'Exclusividad territorial blindada para 3 ciudades',
-        'Panel administrativo avanzado con roles y métricas',
-        'Prioridad máxima en servidores de alta velocidad',
-        'Scripts adaptados por tipología de zona y competencia',
-        'Potencial superior a 3.000€/mes recurrentes',
-        'Asesoría 1 a 1 de configuración y estrategia de captación',
-        'Garantía contractual de bloqueo de plazas',
-      ]
-    },
-    '5cities': {
-      title: '5 Ciudades (Gran Operador)',
-      badge: 'MÁXIMO MARGEN & EXPANSIÓN',
-      price: 1490,
-      oldPrice: 3200,
-      citiesCount: 5,
-      savings: 'Ahorras 1.710€ (Solo 298€/ciudad)',
-      ideal: 'Para quien quiere un negocio a gran escala en las principales capitales.',
-      features: [
-        'Exclusividad territorial blindada para 5 ciudades',
-        'Infraestructura de servidores dedicados de alto rendimiento',
-        'Soporte VIP 24/7 directo con el equipo de desarrollo',
-        'Posibilidad de personalizar marca o dominio para tus clientes',
-        'Margen de facturación potencial de 5.000€ a 15.000€/mes',
-        'Actualizaciones prioritarias ante cualquier cambio de los portales',
-      ]
-    }
+  const currentPack = {
+    title: '1 Ciudad en Exclusiva',
+    badge: 'MÁS RECOMENDADO PARA EMPEZAR',
+    price: 490,
+    oldPrice: 850,
+    citiesCount: 1,
+    savings: 'Ahorras 360€ en implantación',
+    ideal: 'Para quien quiere dominar su ciudad local sin competencia y recuperar la inversión en <25 días.',
+    features: [
+      'Exclusividad territorial blindada para 1 ciudad',
+      'Panel de Control Total (añade, pausa y gestiona anunciantes)',
+      'Bots en servidores dedicados 24/7 (tú no necesitas ordenador encendido)',
+      'Cobras tú el 100% directo (Bizum, efectivo o transferencia)',
+      'Cero comisiones: todo lo que cobras a tus clientes es íntegro para ti',
+      'Radar de comprobación multicanal activo para tus clientes',
+      'Pack de Scripts y Mensajes de captación probados por WhatsApp',
+      'Mantenimiento y actualizaciones técnicas incluidas todo el año',
+    ]
   };
-
-  const currentPack = packData[selectedPack];
 
   const faqs = [
     {
@@ -323,8 +280,8 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
       a: 'Significa que si tú compras la licencia de Valencia (o cualquier otra ciudad disponible), nosotros bloqueamos esa ciudad en nuestro sistema y NUNCA se la venderemos a otra persona. Tú serás el único operador con esta tecnología en esa localidad, evitando guerras de precios y asegurándote el monopolio local de clientes.'
     },
     {
-      q: '¿Por qué aumenta el precio si elijo más ciudades?',
-      a: 'Porque cada ciudad representa un mercado entero con cientos de anunciantes activos y requiere reservar recursos de servidor y bloquear comercialmente ese territorio para que nadie más pueda operarlo. Comprando packs de 2, 3 o 5 ciudades obtienes un descuento muy superior por ciudad (desde 298€/ciudad en vez de 490€).'
+      q: '¿Puedo gestionar más de una ciudad con la herramienta?',
+      a: 'Sí. Puedes empezar con 1 ciudad en exclusiva y añadir más localidades o provincias a tu panel cuando lo necesites, con condiciones preferentes por expansión multiciudad. Escríbenos por WhatsApp para revisar qué zonas están libres y enviarte los detalles.'
     },
     {
       q: '¿Tengo que pagar comisiones o porcentajes de mis ventas?',
@@ -355,33 +312,20 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <a
-              href="/"
+              href="#top"
               onClick={(e) => {
-                if (onBackToHome) {
-                  e.preventDefault();
-                  onBackToHome();
-                }
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="text-lg sm:text-xl font-black tracking-tight text-slate-950 flex items-center gap-1 cursor-pointer hover:opacity-90 transition-opacity"
-              title="Volver a la página principal"
+              title="AutoPubli 24/7"
             >
               <span>AutoPubli</span>
               <span className="text-[#00a651]">24</span>
             </a>
-            <span className="text-slate-300">|</span>
-            <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs">
-              <Building2 className="w-3 h-3 text-[#00a651]" />
-              <span>Licencia Exclusiva por Ciudad</span>
-            </span>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 text-xs font-bold">
-            <button
-              onClick={() => onNavigateToAffiliates && onNavigateToAffiliates()}
-              className="hidden sm:inline-block text-slate-600 hover:text-slate-900 cursor-pointer"
-            >
-              ¿Prefieres solo afiliados?
-            </button>
             <button
               onClick={() => handleContactWhatsApp()}
               className="inline-flex items-center gap-1.5 bg-[#00a651] hover:bg-[#008f45] text-white px-3.5 py-2 rounded-xl shadow-xs transition-all cursor-pointer font-bold"
@@ -394,20 +338,142 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
         </div>
       </header>
 
-      {/* HERO SECTION */}
+      {/* HERO PORTADA (MUESTRA QUÉ HACE LA HERRAMIENTA DE UN VISTAZO) */}
+      <section className="py-10 sm:py-16 border-b border-slate-200 bg-white text-center">
+        <div className="max-w-4xl mx-auto px-4">
+          <h1 className="font-['Outfit',sans-serif] font-[900] text-[#0a1128] -tracking-[0.025em] leading-[1.12] text-[32px] xs:text-[40px] sm:text-[52px] lg:text-[62px] max-w-[360px] xs:max-w-lg sm:max-w-3xl mx-auto mb-6">
+            <span className="block">{content.hero?.titleLine1}</span>
+            <span className="text-[#00a651] block font-[900] mt-1.5 sm:mt-2">
+              {content.hero?.titleHighlight}
+            </span>
+          </h1>
+
+          <p className="font-['Outfit',sans-serif] font-bold text-[#334155] text-[18px] xs:text-[20px] sm:text-[23px] leading-[1.45] max-w-[420px] sm:max-w-xl mx-auto mb-8 sm:mb-10 text-center">
+            {content.hero?.description?.includes('Tú solo cobras') ? (
+              <>
+                <span>{content.hero.description.split('Tú solo cobras')[0].trim()}</span>
+                <br />
+                <span className="text-[#00a651] font-[900] underline underline-offset-4 decoration-2 decoration-[#00a651] inline-block mt-1 sm:mt-1.5">
+                  Tú solo cobras.
+                </span>
+                {content.hero.description.split('Tú solo cobras').slice(1).join('Tú solo cobras').replace(/^\./, '').trim()}
+              </>
+            ) : (
+              <span className="whitespace-pre-line">{content.hero?.description}</span>
+            )}
+          </p>
+
+          <div className="mb-8">
+            <div className="flex justify-center mb-3.5">
+              <button
+                type="button"
+                onClick={() => {
+                  const targetId = showCityPricingSection ? 'calculadora-ciudades' : 'comprobar-ciudad';
+                  const el = document.getElementById(targetId);
+                  el?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 sm:px-9 py-4 bg-[#00a651] hover:bg-green-600 text-white font-black text-sm sm:text-base rounded-2xl shadow-xl shadow-green-600/30 transition-all cursor-pointer active:scale-95"
+              >
+                <Zap className="w-5 h-5 fill-current text-yellow-300" />
+                <span>{showCityPricingSection ? 'VER LICENCIA PARA MI CIUDAD' : 'COMPROBAR SI MI CIUDAD ESTÁ LIBRE'}</span>
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1.5 text-xs font-semibold text-slate-700">
+              <div className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-[#00a651] shrink-0" />
+                <span>{content.hero.trustBadges[0]}</span>
+              </div>
+              <span className="text-slate-300 hidden sm:inline">·</span>
+              <div className="inline-flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#00a651] shrink-0" />
+                <span>{content.hero.trustBadges[1]}</span>
+              </div>
+              <span className="text-slate-300 hidden sm:inline">·</span>
+              <div className="inline-flex items-center gap-1.5">
+                <div className="flex text-amber-500">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                  ))}
+                </div>
+                <span className="font-bold text-slate-900">{content.hero.trustBadges[2]}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="max-w-2xl mx-auto bg-slate-950 rounded-2xl sm:rounded-3xl p-2.5 sm:p-4 shadow-2xl border-2 sm:border-4 border-slate-950">
+            <div className="rounded-xl sm:rounded-2xl overflow-hidden bg-slate-900 relative">
+              <img
+                src={portadaAutoPubli24}
+                alt="Panel de control AutoPubli24 y rotación automática en nube"
+                className="w-full aspect-[16/9] object-cover"
+                loading="eager"
+                referrerPolicy="no-referrer"
+              />
+              <div className="p-3 bg-slate-950/95 text-white flex items-center justify-between text-[11px] sm:text-xs font-bold border-t border-slate-800">
+                <span className="flex items-center gap-1.5 text-green-400">
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                  <span className="font-mono font-bold tracking-tight transition-all duration-300">
+                    {activeAdsCount}
+                  </span>
+                  <span>Anuncios activos</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PORTALES PRINCIPALES (COMPATIBILIDAD TOTAL) */}
+      <section className="py-12 sm:py-16 bg-slate-50/80 border-b border-slate-200 overflow-hidden">
+        <div className="max-w-5xl mx-auto px-4 text-center mb-8 sm:mb-10">
+          <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-green-800 bg-green-100 border border-green-300 px-3.5 py-1.5 rounded-full mb-3 inline-block shadow-2xs">
+            {content.portals.badge}
+          </span>
+          <h2 className="text-2xl sm:text-4xl font-black text-slate-950 tracking-tight leading-tight mb-3">
+            {content.portals.title}
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto leading-relaxed font-medium">
+            {content.portals.subtitle}
+          </p>
+        </div>
+
+        <div className="relative w-full overflow-hidden py-3">
+          <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-slate-50 via-slate-50/80 to-transparent z-10" />
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-slate-50 via-slate-50/80 to-transparent z-10" />
+
+          <div className="flex animate-marquee gap-5 sm:gap-7 items-center w-max">
+            {[
+              ...content.portals.logos,
+              ...content.portals.logos,
+              ...content.portals.logos,
+              ...content.portals.logos,
+            ].map((portal, idx) => (
+              <div
+                key={`${portal.id}-${idx}`}
+                className="shrink-0 flex items-center justify-center px-6 py-3.5 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-[#00a651] rounded-2xl shadow-xs hover:shadow-md transition-all h-20 sm:h-24 w-48 sm:w-56 group cursor-default"
+              >
+                <img
+                  src={portal.logo}
+                  alt={portal.name}
+                  className="max-h-11 sm:max-h-13 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-200"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SECCIÓN CONSIGUE LA HERRAMIENTA EN TU CIUDAD */}
       <section className="relative overflow-hidden pt-12 pb-16 sm:pt-20 sm:pb-24 bg-gradient-to-b from-white via-emerald-50/20 to-slate-50 border-b border-slate-200">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-96 bg-gradient-to-b from-emerald-100/50 via-teal-50/20 to-transparent pointer-events-none blur-3xl" />
         
         <div className="max-w-5xl mx-auto px-4 relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-300 text-amber-900 text-xs font-black tracking-wide uppercase mb-6 shadow-xs animate-fadeIn">
-            <Lock className="w-3.5 h-3.5 text-amber-600" />
-            <span>1 Único Operador por Ciudad · Exclusividad Garantizada</span>
-          </div>
-
-          <h1 className="font-['Outfit',sans-serif] font-[900] text-3xl sm:text-5xl lg:text-6xl tracking-tight text-[#0a1128] leading-[1.1] mb-6">
-            Sé el dueño de la herramienta en tu ciudad y quédate con el{' '}
+          <h2 className="font-['Outfit',sans-serif] font-[900] text-3xl sm:text-5xl lg:text-6xl tracking-tight text-[#0a1128] leading-[1.1] mb-6">
+            Consigue la herramienta en tu ciudad y quédate con el{' '}
             <span className="text-[#00a651] underline decoration-[#00a651]/30">100% de los ingresos</span>
-          </h1>
+          </h2>
 
           <p className="font-['Plus_Jakarta_Sans',sans-serif] text-slate-600 text-base sm:text-xl max-w-3xl mx-auto leading-relaxed mb-8">
             Te entregamos la tecnología completa de <strong>AutoPubli 24/7</strong> configurada y lista para funcionar en tu localidad. Automatiza cientos de anunciantes en MilPasiones, PasiónValencia y MundoSexAnuncio, cobra entre <strong>25€ y 50€ al mes por cliente recurrente</strong> y nosotros nos encargamos de los servidores y el soporte técnico.
@@ -415,19 +481,11 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
 
           <div className="flex flex-wrap items-center justify-center gap-4 mb-12">
             <a
-              href="#calculadora-ciudades"
-              className="inline-flex items-center justify-center gap-2 bg-[#00a651] hover:bg-[#008f45] text-white text-base sm:text-lg font-bold px-7 py-4 rounded-2xl shadow-lg shadow-green-600/20 hover:shadow-green-600/30 transition-all cursor-pointer transform hover:-translate-y-0.5"
-            >
-              <Building2 className="w-5 h-5" />
-              <span>Ver Precios por Ciudad</span>
-            </a>
-
-            <a
               href="#comprobar-ciudad"
               className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-800 text-base sm:text-lg font-bold px-7 py-4 rounded-2xl border-2 border-slate-300 shadow-xs transition-all cursor-pointer"
             >
               <MapPin className="w-5 h-5 text-emerald-600" />
-              <span>Comprobar si tu Ciudad está libre</span>
+              <span>Comprobar tu ciudad</span>
             </a>
           </div>
 
@@ -468,264 +526,82 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
         </div>
       </section>
 
-      {/* COMPROBADOR DE DISPONIBILIDAD DE CIUDAD */}
-      <section id="comprobar-ciudad" className="py-14 sm:py-20 bg-white border-b border-slate-200">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center mb-8">
-            <span className="text-xs font-black uppercase text-emerald-700 tracking-wider bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-              Paso 1: Audita tu territorio
+      {/* ¿QUÉ INCLUYE LA HERRAMIENTA COMPLETA? */}
+      <section className="py-16 sm:py-24 bg-slate-50 border-b border-slate-200">
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <span className="text-xs font-black uppercase text-emerald-700 tracking-wider bg-emerald-100/70 px-3.5 py-1 rounded-full border border-emerald-300">
+              Entrega Inmediata Llave en Mano
             </span>
-            <h2 className="font-['Outfit',sans-serif] font-bold text-2xl sm:text-4xl text-[#0a1128] mt-2 mb-2">
-              Comprueba si tu ciudad está disponible para bloquearla
+            <h2 className="font-['Outfit',sans-serif] font-bold text-3xl sm:text-4xl text-[#0a1128] mt-2 mb-3">
+              Todo lo que recibes al comprar la herramienta
             </h2>
             <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto">
-              Solo admitimos 1 titular por localidad. Introduce tu ciudad para revisar el volumen de anunciantes y confirmar si la exclusividad sigue libre.
+              Te entregamos el ecosistema listo para que no tengas que picar código ni contratar diseñadores:
             </p>
           </div>
 
-          {/* Caja de Búsqueda */}
-          <div className="max-w-lg mx-auto mb-6">
-            <div className="relative">
-              <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                value={searchCity}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setSearchCity(val);
-                  if (val.trim()) {
-                    const match = ALL_SPANISH_CITIES.find(c => normalizeText(c.name) === normalizeText(val));
-                    if (match) {
-                      setSelectedCityForInquiry(match.name);
-                    } else {
-                      setSelectedCityForInquiry(val);
-                    }
-                  }
-                }}
-                placeholder="Escribe tu ciudad o capital (ej. Toledo, Cáceres, Valencia, Lugo...)"
-                className="w-full bg-slate-50 hover:bg-white focus:bg-white border-2 border-slate-300 focus:border-[#00a651] focus:ring-4 focus:ring-green-500/15 rounded-2xl py-3.5 pl-12 pr-10 text-slate-900 font-semibold outline-none transition-all shadow-xs"
-              />
-              {searchCity.trim() && (
-                <button
-                  type="button"
-                  onClick={() => setSearchCity('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
-                  title="Borrar búsqueda"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Indicador de estado de búsqueda (solo visible en modo PC como salía antes) */}
-          <div className="hidden md:block text-center text-xs text-slate-500 mb-6">
-            {!searchCity.trim() ? (
-              <p>
-                Mostrando <strong>8 principales ciudades de España</strong> · Escribe en el buscador para consultar cualquier otra capital de provincia.
-              </p>
-            ) : (
-              <div className="flex items-center justify-center gap-2">
-                <span>
-                  Mostrando <strong>{filteredCities.length}</strong> {filteredCities.length === 1 ? 'resultado' : 'resultados'} para "<strong>{searchCity}</strong>"
-                </span>
-                <span className="text-slate-300">·</span>
-                <button
-                  type="button"
-                  onClick={() => setSearchCity('')}
-                  className="text-emerald-700 font-bold hover:underline cursor-pointer"
-                >
-                  Ver las 8 principales
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Grid de Ciudades: visible en modo PC como salía antes, y en móvil ninguna (hidden en móvil) */}
-          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-            {filteredCities.map((city, idx) => {
-              const isOccupied = city.status === 'reservada';
-              const isSelected = selectedCityForInquiry === city.name;
-
-              return (
-                <div
-                  key={idx}
-                  onClick={() => {
-                    setSelectedCityForInquiry(city.name);
-                  }}
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
-                    !isOccupied
-                      ? isSelected
-                        ? 'border-[#00a651] bg-emerald-50/50 shadow-md ring-2 ring-emerald-500/20'
-                        : 'border-slate-200 bg-white hover:border-slate-300 shadow-2xs hover:shadow-sm'
-                      : isSelected
-                        ? 'border-amber-400 bg-amber-50/80 shadow-md ring-2 ring-amber-400/30'
-                        : 'border-amber-200/80 bg-amber-50/30 hover:border-amber-300 hover:bg-amber-50/60 shadow-2xs'
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-start justify-between gap-1 mb-1.5">
-                      <div>
-                        <h4 className="font-['Outfit',sans-serif] font-bold text-slate-900 text-base leading-tight">
-                          {city.name}
-                        </h4>
-                        <span className="text-[11px] text-slate-400 font-medium">
-                          {city.province}{city.isCapital ? ' · Capital' : ''}
-                        </span>
-                      </div>
-
-                      {!isOccupied ? (
-                        <span className="shrink-0 text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                          LIBRE
-                        </span>
-                      ) : (
-                        <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
-                          <Lock className="w-2.5 h-2.5 text-amber-700" />
-                          <span>OCUPADA</span>
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="text-xs text-slate-500 space-y-0.5 mt-2">
-                      <p>~{city.estimatedAds} anunciantes activas</p>
-                      <p className={!isOccupied ? "text-emerald-700 font-bold" : "text-slate-600 font-semibold"}>
-                        Potencial: ~{city.potentialMonthly}€/mes
-                      </p>
-                      {isOccupied && (
-                        <p className="text-[11px] text-amber-800/90 font-medium flex items-center gap-1 pt-0.5">
-                          <Clock className="w-3 h-3 text-amber-600 shrink-0" />
-                          <span>Operador activo en exclusiva</span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {!isOccupied ? (
-                    <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-emerald-700">
-                      <span>{isSelected ? '✓ Ciudad seleccionada' : 'Elegir esta ciudad'}</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </div>
-                  ) : (
-                    <div className="mt-3 pt-2 border-t border-amber-200/60">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedCityForInquiry(city.name);
-                          handleWaitlistWhatsApp(city.name);
-                        }}
-                        className="w-full inline-flex items-center justify-between text-[11px] font-bold text-amber-900 bg-amber-100/90 hover:bg-amber-200 px-2.5 py-1.5 rounded-lg border border-amber-300/80 transition-all cursor-pointer group shadow-2xs"
-                        title={`Avisarme por WhatsApp si ${city.name} queda libre`}
-                      >
-                        <span className="inline-flex items-center gap-1.5">
-                          <Bell className="w-3 h-3 text-amber-700 group-hover:scale-110 transition-transform" />
-                          <span>Avisarme cuando esté libre</span>
-                        </span>
-                        <MessageCircle className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
-                      </button>
-                    </div>
-                  )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-[#00a651] flex items-center justify-center font-bold mb-4">
+                  <Sliders className="w-6 h-6" />
                 </div>
-              );
-            })}
-
-            {/* Fallback interactivo si no encuentra coincidencia en las capitales */}
-            {filteredCities.length === 0 && (
-              <div className="col-span-full bg-emerald-50/80 border-2 border-dashed border-emerald-300 rounded-3xl p-8 text-center shadow-xs">
-                <MapPin className="w-10 h-10 text-[#00a651] mx-auto mb-3" />
-                <h4 className="font-['Outfit',sans-serif] font-bold text-slate-900 text-xl mb-1.5">
-                  ¿Quieres la exclusiva para "{searchCity}"?
+                <h4 className="font-['Outfit',sans-serif] font-bold text-lg text-slate-900 mb-2">
+                  1. Panel de Control de Clientes
                 </h4>
-                <p className="text-slate-600 text-sm max-w-lg mx-auto mb-5 leading-relaxed">
-                  Aunque no esté en la lista estándar de capitales, también puedes solicitar la herramienta completa para cualquier municipio, comarca o zona de España.
+                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                  Añade el número de teléfono de tu clienta, los portales donde se anuncia y el intervalo de republicación. Activa, pausa o edita sus publicaciones en segundos.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCityForInquiry(searchCity.trim())}
-                  className="bg-[#00a651] hover:bg-[#008f45] text-white font-bold px-6 py-3 rounded-xl shadow-md transition-all inline-flex items-center gap-2 cursor-pointer text-sm"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Seleccionar "{searchCity.trim()}" y consultar disponibilidad</span>
-                </button>
               </div>
-            )}
+              <span className="mt-4 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 inline-block w-fit">
+                ✓ Intuitivo desde el móvil o PC
+              </span>
+            </div>
+
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold mb-4">
+                  <Cpu className="w-6 h-6" />
+                </div>
+                <h4 className="font-['Outfit',sans-serif] font-bold text-lg text-slate-900 mb-2">
+                  2. Servidores Cloud & Bots 24/7
+                </h4>
+                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                  Los bots operan de forma ininterrumpida en servidores cloud de alto rendimiento. Conectan en directo con MilPasiones, PasiónValencia y MundoSexAnuncio sin consumir tus recursos.
+                </p>
+              </div>
+              <span className="mt-4 text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200 inline-block w-fit">
+                ✓ Mantenimiento técnico incluido
+              </span>
+            </div>
+
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold mb-4">
+                  <MessageCircle className="w-6 h-6" />
+                </div>
+                <h4 className="font-['Outfit',sans-serif] font-bold text-lg text-slate-900 mb-2">
+                  3. Scripts de Captación Directa
+                </h4>
+                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                  Te facilitamos los mensajes exactos y el paso a paso de cómo contactar por WhatsApp con anunciantes caídas en puestos inferiores. Es una oferta irresistible que compran al instante.
+                </p>
+              </div>
+              <span className="mt-4 text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 inline-block w-fit">
+                ✓ Tasa de conversión &gt;25%
+              </span>
+            </div>
           </div>
-
-          {/* Opción para seleccionar municipio personalizado si busca algo que no está exactamente nombrado (solo en PC) */}
-          {searchCity.trim() && filteredCities.length > 0 && !filteredCities.some(c => normalizeText(c.name) === normalizeText(searchCity)) && (
-            <div className="hidden md:flex mb-8 p-3 rounded-2xl bg-slate-100 border border-slate-200 text-center text-xs text-slate-600 flex-wrap items-center justify-center gap-2">
-              <span>¿No es exactamente lo que buscas?</span>
-              <button
-                type="button"
-                onClick={() => setSelectedCityForInquiry(searchCity.trim())}
-                className="font-bold text-[#00a651] hover:underline cursor-pointer"
-              >
-                Seleccionar "{searchCity.trim()}" directamente para consultar disponibilidad →
-              </button>
-            </div>
-          )}
-
-          {/* Banner de Reserva de la Ciudad Seleccionada o Lista de Espera */}
-          {!isSelectedCityOccupied ? (
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
-              <div>
-                <div className="inline-flex items-center gap-1.5 text-xs font-bold bg-white/20 px-3 py-1 rounded-full mb-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
-                  <span>Exclusividad Territorial Disponible</span>
-                </div>
-                <h3 className="font-['Outfit',sans-serif] font-bold text-2xl sm:text-3xl leading-tight">
-                  ¿Quieres la exclusiva de <span className="underline decoration-white/40">{selectedCityForInquiry || 'tu ciudad'}</span>?
-                </h3>
-                <p className="text-emerald-100 text-xs sm:text-sm mt-1 max-w-xl">
-                  Al solicitarla, la retiramos inmediatamente de la venta para otros interesados y firmas el contrato de reserva.
-                </p>
-              </div>
-
-              <button
-                onClick={() => handleContactWhatsApp(selectedCityForInquiry)}
-                className="shrink-0 bg-white hover:bg-slate-100 text-slate-900 font-bold px-6 py-3.5 rounded-2xl shadow-lg transition-all flex items-center gap-2 cursor-pointer text-sm sm:text-base"
-              >
-                <MessageCircle className="w-5 h-5 text-[#00a651]" />
-                <span>Bloquear Exclusiva de {selectedCityForInquiry}</span>
-              </button>
-            </div>
-          ) : (
-            <div className="bg-gradient-to-r from-slate-900 via-amber-950 to-slate-900 border-2 border-amber-500/50 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
-              <div>
-                <div className="inline-flex items-center gap-1.5 text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full mb-2">
-                  <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Zona Ocupada · Lista de Espera Activa</span>
-                </div>
-                <h3 className="font-['Outfit',sans-serif] font-bold text-2xl sm:text-3xl leading-tight text-white">
-                  {selectedCityForInquiry} tiene un operador activo en exclusividad
-                </h3>
-                <p className="text-amber-100/90 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
-                  Para proteger su inversión, no concedemos licencias duplicadas en la misma plaza. Pero si el titular actual no renueva, cambia de zona o traspasa la licencia, contactamos por <strong>estricto orden de solicitud</strong>. Escríbenos para apuntarte o consultar opciones.
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full sm:w-auto">
-                <button
-                  onClick={() => handleWaitlistWhatsApp(selectedCityForInquiry)}
-                  className="bg-[#00a651] hover:bg-[#008f45] text-white font-bold px-6 py-3.5 rounded-2xl shadow-lg shadow-green-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  <span>Avisarme por WhatsApp de {selectedCityForInquiry}</span>
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
-      {/* SECCIÓN PRECIOS Y SELECTOR DE CIUDADES */}
+      {/* SECCIÓN PRECIOS (OCULTA TEMPORALMENTE SIN ELIMINAR PARA MAXIMIZAR LEADS) */}
+      {showCityPricingSection && (
       <section id="calculadora-ciudades" className="py-16 sm:py-24 bg-slate-50 border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-10 sm:mb-12">
-            <span className="text-xs font-black uppercase text-emerald-700 tracking-wider bg-emerald-100/70 px-3.5 py-1 rounded-full border border-emerald-300">
-              Paso 2: Elige tu escala de expansión
-            </span>
-            <h2 className="font-['Outfit',sans-serif] font-bold text-3xl sm:text-4xl text-[#0a1128] mt-3 mb-3">
+            <h2 className="font-['Outfit',sans-serif] font-bold text-3xl sm:text-4xl text-[#0a1128] mb-3">
               Licencia para 1 Ciudad o Expansión Multiciudad
             </h2>
             <p className="text-slate-600 text-base max-w-2xl mx-auto">
@@ -733,62 +609,7 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
             </p>
           </div>
 
-          {/* Selector de Pestañas de Packs */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-10 max-w-3xl mx-auto">
-            <button
-              onClick={() => setSelectedPack('1city')}
-              className={`px-4 sm:px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2 border-2 ${
-                selectedPack === '1city'
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-md'
-                  : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <MapPin className="w-4 h-4 text-[#00a651]" />
-              <span>1 Ciudad Exclusiva</span>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full ml-1">490€</span>
-            </button>
-
-            <button
-              onClick={() => setSelectedPack('2cities')}
-              className={`px-4 sm:px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2 border-2 ${
-                selectedPack === '2cities'
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-md'
-                  : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <Layers className="w-4 h-4 text-orange-500" />
-              <span>2 Ciudades (Dúo)</span>
-              <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full ml-1">790€</span>
-            </button>
-
-            <button
-              onClick={() => setSelectedPack('3cities')}
-              className={`px-4 sm:px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2 border-2 ${
-                selectedPack === '3cities'
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-md'
-                  : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <Building2 className="w-4 h-4 text-purple-500" />
-              <span>3 Ciudades (Regional)</span>
-              <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">990€</span>
-            </button>
-
-            <button
-              onClick={() => setSelectedPack('5cities')}
-              className={`px-4 sm:px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2 border-2 ${
-                selectedPack === '5cities'
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-md'
-                  : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <Globe2 className="w-4 h-4 text-blue-500" />
-              <span>5 Ciudades (Gran Operador)</span>
-              <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full ml-1">1.490€</span>
-            </button>
-          </div>
-
-          {/* Tarjeta de Detalle del Pack Seleccionado */}
+          {/* Tarjeta de Detalle del Pack 1 Ciudad */}
           <div className="bg-white border-2 border-emerald-400 rounded-3xl p-6 sm:p-10 shadow-xl max-w-4xl mx-auto relative overflow-hidden">
             <div className="absolute top-0 right-0 bg-[#00a651] text-white text-[11px] font-black uppercase tracking-wider px-6 py-1.5 rounded-bl-2xl shadow-xs">
               {currentPack.badge}
@@ -881,76 +702,313 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
           </div>
         </div>
       </section>
+      )}
 
-
-
-      {/* ¿QUÉ INCLUYE LA HERRAMIENTA COMPLETA? */}
-      <section className="py-16 sm:py-24 bg-slate-50 border-b border-slate-200">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <span className="text-xs font-black uppercase text-emerald-700 tracking-wider bg-emerald-100/70 px-3.5 py-1 rounded-full border border-emerald-300">
-              Entrega Inmediata Llave en Mano
+      {/* COMPROBADOR DE DISPONIBILIDAD DE CIUDAD */}
+      <section id="comprobar-ciudad" className="py-14 sm:py-20 bg-white border-b border-slate-200">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center mb-8">
+            <span className="text-xs font-black uppercase text-emerald-700 tracking-wider bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              Paso 1: Audita tu territorio
             </span>
-            <h2 className="font-['Outfit',sans-serif] font-bold text-3xl sm:text-4xl text-[#0a1128] mt-2 mb-3">
-              Todo lo que recibes al comprar la herramienta
+            <h2 className="font-['Outfit',sans-serif] font-bold text-2xl sm:text-4xl text-[#0a1128] mt-2 mb-2">
+              Comprueba si tu ciudad está disponible para bloquearla
             </h2>
             <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto">
-              Te entregamos el ecosistema listo para que no tengas que picar código ni contratar diseñadores:
+              Solo admitimos 1 titular por localidad. Introduce tu ciudad para revisar el volumen de anunciantes y confirmar si la exclusividad sigue libre.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
-              <div>
-                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-[#00a651] flex items-center justify-center font-bold mb-4">
-                  <Sliders className="w-6 h-6" />
-                </div>
-                <h4 className="font-['Outfit',sans-serif] font-bold text-lg text-slate-900 mb-2">
-                  1. Panel de Control de Clientes
-                </h4>
-                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                  Añade el número de teléfono de tu clienta, los portales donde se anuncia y el intervalo de republicación. Activa, pausa o edita sus publicaciones en segundos.
-                </p>
-              </div>
-              <span className="mt-4 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 inline-block w-fit">
-                ✓ Intuitivo desde el móvil o PC
-              </span>
-            </div>
-
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
-              <div>
-                <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold mb-4">
-                  <Cpu className="w-6 h-6" />
-                </div>
-                <h4 className="font-['Outfit',sans-serif] font-bold text-lg text-slate-900 mb-2">
-                  2. Servidores Cloud & Bots 24/7
-                </h4>
-                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                  Los bots operan de forma ininterrumpida en servidores cloud de alto rendimiento. Conectan en directo con MilPasiones, PasiónValencia y MundoSexAnuncio sin consumir tus recursos.
-                </p>
-              </div>
-              <span className="mt-4 text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200 inline-block w-fit">
-                ✓ Mantenimiento técnico incluido
-              </span>
-            </div>
-
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
-              <div>
-                <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold mb-4">
-                  <MessageCircle className="w-6 h-6" />
-                </div>
-                <h4 className="font-['Outfit',sans-serif] font-bold text-lg text-slate-900 mb-2">
-                  3. Scripts de Captación Directa
-                </h4>
-                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                  Te facilitamos los mensajes exactos y el paso a paso de cómo contactar por WhatsApp con anunciantes caídas en puestos inferiores. Es una oferta irresistible que compran al instante.
-                </p>
-              </div>
-              <span className="mt-4 text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 inline-block w-fit">
-                ✓ Tasa de conversión &gt;25%
-              </span>
+          {/* Caja de Búsqueda */}
+          <div className="max-w-lg mx-auto mb-6">
+            <div className="relative">
+              <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={searchCity}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSearchCity(val);
+                  if (val.trim()) {
+                    const match = ALL_SPANISH_CITIES.find(c => normalizeText(c.name) === normalizeText(val));
+                    if (match) {
+                      setSelectedCityForInquiry(match.name);
+                    } else {
+                      setSelectedCityForInquiry(val.trim());
+                    }
+                  } else {
+                    setSelectedCityForInquiry('');
+                  }
+                }}
+                placeholder="Escribe tu ciudad o capital (ej. Toledo, Cáceres, Valencia, Lugo...)"
+                className="w-full bg-slate-50 hover:bg-white focus:bg-white border-2 border-slate-300 focus:border-[#00a651] focus:ring-4 focus:ring-green-500/15 rounded-2xl py-3.5 pl-12 pr-10 text-slate-900 font-semibold outline-none transition-all shadow-xs"
+              />
+              {searchCity.trim() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchCity('');
+                    setSelectedCityForInquiry('');
+                  }}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+                  title="Borrar búsqueda"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
+
+          {/* Resultado simple de disponibilidad al escribir una ciudad */}
+          {searchCity.trim() && (
+            <div className="max-w-lg mx-auto mb-8 space-y-2.5">
+              {filteredCities.length > 0 ? (
+                <>
+                  {filteredCities.slice(0, 6).map((city, idx) => {
+                    const isOccupied = city.status === 'reservada';
+                    const isSelected = normalizeText(selectedCityForInquiry) === normalizeText(city.name);
+
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => setSelectedCityForInquiry(city.name)}
+                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                          !isOccupied
+                            ? isSelected
+                              ? 'border-[#00a651] bg-emerald-50/70 shadow-sm'
+                              : 'border-slate-200 bg-white hover:border-emerald-300'
+                            : isSelected
+                              ? 'border-amber-400 bg-amber-50/80 shadow-sm'
+                              : 'border-amber-200 bg-amber-50/40 hover:border-amber-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
+                              isSelected
+                                ? !isOccupied
+                                  ? 'bg-[#00a651] border-[#00a651] text-white'
+                                  : 'bg-amber-600 border-amber-600 text-white'
+                                : 'border-slate-300 bg-white'
+                            }`}
+                          >
+                            {isSelected && <Check className="w-3.5 h-3.5" />}
+                          </div>
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-['Outfit',sans-serif] font-bold text-slate-900 text-base">
+                                {city.name}
+                              </span>
+                              {!isOccupied ? (
+                                <span className="text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                  Disponible
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                                  <Lock className="w-2.5 h-2.5 text-amber-700" />
+                                  <span>No disponible (Ocupada)</span>
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs text-slate-500">
+                              {city.province}
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCityForInquiry(city.name);
+                          }}
+                          className={`shrink-0 text-xs font-bold px-3 py-1.5 rounded-xl transition-colors cursor-pointer ${
+                            isSelected
+                              ? !isOccupied
+                                ? 'bg-[#00a651] text-white'
+                                : 'bg-amber-600 text-white'
+                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                          }`}
+                        >
+                          {isSelected ? '✓ Marcada' : 'Marcar'}
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                  {!filteredCities.some(c => normalizeText(c.name) === normalizeText(searchCity)) && (
+                    <div
+                      onClick={() => setSelectedCityForInquiry(searchCity.trim())}
+                      className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                        normalizeText(selectedCityForInquiry) === normalizeText(searchCity)
+                          ? 'border-[#00a651] bg-emerald-50/70'
+                          : 'border-dashed border-slate-300 bg-slate-50 hover:border-emerald-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-xs sm:text-sm font-bold text-slate-800 truncate">
+                          "{searchCity.trim()}"
+                        </span>
+                        <span className="text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">
+                          Disponible
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCityForInquiry(searchCity.trim());
+                        }}
+                        className={`shrink-0 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer ${
+                          normalizeText(selectedCityForInquiry) === normalizeText(searchCity)
+                            ? 'bg-[#00a651] text-white'
+                            : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {normalizeText(selectedCityForInquiry) === normalizeText(searchCity) ? '✓ Marcada' : 'Marcar'}
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div
+                  onClick={() => setSelectedCityForInquiry(searchCity.trim())}
+                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                    normalizeText(selectedCityForInquiry) === normalizeText(searchCity)
+                      ? 'border-[#00a651] bg-emerald-50/70 shadow-sm'
+                      : 'border-slate-200 bg-white hover:border-emerald-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${
+                        normalizeText(selectedCityForInquiry) === normalizeText(searchCity)
+                          ? 'bg-[#00a651] border-[#00a651] text-white'
+                          : 'border-slate-300 bg-white'
+                      }`}
+                    >
+                      {normalizeText(selectedCityForInquiry) === normalizeText(searchCity) && <Check className="w-3.5 h-3.5" />}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      <span className="font-['Outfit',sans-serif] font-bold text-slate-900 text-base">
+                        {searchCity.trim()}
+                      </span>
+                      <span className="text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        Disponible
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCityForInquiry(searchCity.trim());
+                    }}
+                    className={`shrink-0 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer ${
+                      normalizeText(selectedCityForInquiry) === normalizeText(searchCity)
+                        ? 'bg-[#00a651] text-white'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    }`}
+                  >
+                    {normalizeText(selectedCityForInquiry) === normalizeText(searchCity) ? '✓ Marcada' : 'Marcar'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Banner de Reserva de la Ciudad Seleccionada o Lista de Espera */}
+          {!isSelectedCityOccupied ? (
+            <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold bg-white/20 px-3 py-1 rounded-full mb-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>Exclusividad Territorial Disponible</span>
+                </div>
+                <h3 className="font-['Outfit',sans-serif] font-bold text-2xl sm:text-3xl leading-tight">
+                  ¿Quieres la exclusiva de <span className="underline decoration-white/40">{selectedCityForInquiry || 'tu ciudad'}</span>?
+                </h3>
+                <p className="text-emerald-100 text-xs sm:text-sm mt-1 max-w-xl">
+                  Al solicitarla, la retiramos inmediatamente de la venta para otros interesados y firmas el contrato de reserva.
+                </p>
+              </div>
+
+              <button
+                onClick={() => handleContactWhatsApp(selectedCityForInquiry)}
+                className="shrink-0 bg-white hover:bg-slate-100 text-slate-900 font-bold px-6 py-3.5 rounded-2xl shadow-lg transition-all flex items-center gap-2 cursor-pointer text-sm sm:text-base"
+              >
+                <MessageCircle className="w-5 h-5 text-[#00a651]" />
+                <span>
+                  {selectedCityForInquiry
+                    ? `Bloquear Exclusiva de ${selectedCityForInquiry}`
+                    : 'Consultar Exclusiva de mi Ciudad'}
+                </span>
+              </button>
+            </div>
+          ) : (
+            <div className="bg-gradient-to-r from-slate-900 via-amber-950 to-slate-900 border-2 border-amber-500/50 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full mb-2">
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Zona Ocupada · Lista de Espera Activa</span>
+                </div>
+                <h3 className="font-['Outfit',sans-serif] font-bold text-2xl sm:text-3xl leading-tight text-white">
+                  {selectedCityForInquiry} tiene un operador activo en exclusividad
+                </h3>
+                <p className="text-amber-100/90 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
+                  Para proteger su inversión, no concedemos licencias duplicadas en la misma plaza. Pero si el titular actual no renueva, cambia de zona o traspasa la licencia, contactamos por <strong>estricto orden de solicitud</strong>. Escríbenos para apuntarte o consultar opciones.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full sm:w-auto">
+                <button
+                  onClick={() => handleWaitlistWhatsApp(selectedCityForInquiry)}
+                  className="bg-[#00a651] hover:bg-[#008f45] text-white font-bold px-6 py-3.5 rounded-2xl shadow-lg shadow-green-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span>Avisarme por WhatsApp de {selectedCityForInquiry}</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* GARANTÍA DE DEVOLUCIÓN */}
+      <section className="py-12 sm:py-20 bg-slate-50 border-b border-slate-200 text-center">
+        <div className="max-w-3xl mx-auto px-4">
+          <div className="flex items-center justify-center mx-auto mb-5">
+            <img
+              src={bizumLogo}
+              alt="Bizum Garantía 100%"
+              className="h-[68px] w-auto object-contain max-w-[240px]"
+              style={{ height: '68px' }}
+              loading="lazy"
+            />
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950 tracking-tight mb-4">
+            {content.guarantee.title}
+          </h2>
+
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto mb-8 font-medium">
+            {content.guarantee.descriptionBeforeBold}
+            <strong className="font-bold text-slate-950">{content.guarantee.boldText}</strong>
+            {content.guarantee.descriptionAfterBold}
+          </p>
+
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById('comprobar-ciudad');
+              el?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-[#00a651] hover:bg-green-600 text-white font-black text-sm sm:text-base rounded-2xl shadow-xl shadow-green-600/30 transition-all cursor-pointer active:scale-95"
+          >
+            <Zap className="w-5 h-5 fill-current text-white" />
+            <span>Comprobar mi ciudad sin riesgo</span>
+          </button>
         </div>
       </section>
 
@@ -1035,10 +1093,14 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
             </button>
 
             <button
-              onClick={() => onBackToHome && onBackToHome()}
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('comprobar-ciudad');
+                el?.scrollIntoView({ behavior: 'smooth' });
+              }}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-base font-bold px-7 py-4 rounded-2xl border border-slate-700 transition-all cursor-pointer"
             >
-              <span>Volver a la portada</span>
+              <span>Comprobar disponibilidad de mi ciudad</span>
             </button>
           </div>
         </div>
@@ -1054,16 +1116,14 @@ export const CityLicensePage: React.FC<CityLicensePageProps> = ({
 
           <div className="flex items-center gap-4 text-slate-400">
             <button
-              onClick={() => onBackToHome && onBackToHome()}
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('comprobar-ciudad');
+                el?.scrollIntoView({ behavior: 'smooth' });
+              }}
               className="hover:text-white cursor-pointer"
             >
-              Inicio
-            </button>
-            <button
-              onClick={() => onNavigateToAffiliates && onNavigateToAffiliates()}
-              className="hover:text-white cursor-pointer"
-            >
-              Afiliados
+              Comprobar ciudad
             </button>
             <button
               onClick={() => handleContactWhatsApp()}
