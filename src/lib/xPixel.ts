@@ -2,6 +2,8 @@
  * Client-side helper for X (Twitter) Pixel tracking and Conversion API bridging
  */
 
+import { trackTikTokContact } from './tiktokPixel';
+
 declare global {
   interface Window {
     twq?: (...args: any[]) => void;
@@ -143,6 +145,13 @@ export function trackXWhatsAppPurchase(details?: {
     eventId: (typeof window !== 'undefined' && window.X_EVENT_PURCHASE) ? window.X_EVENT_PURCHASE : 'purchase',
     conversionId,
     phone: details?.phone,
+  });
+
+  // 3. Disparar evento de Contacto en el píxel de TikTok
+  trackTikTokContact({
+    contentName: details?.planOrCity || 'AutoPubli24 Activacion',
+    value,
+    currency: 'EUR',
   });
 
   return conversionId;

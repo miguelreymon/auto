@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 const Analytics = () => null;
 import { PromoPage } from './versions/PromoPage';
 import { AffiliatesPage } from './versions/AffiliatesPage';
@@ -16,6 +16,7 @@ import { SupabaseLeadsAdminModal } from './components/SupabaseLeadsAdminModal';
 import { AnalyticsDashboardModal } from './components/AnalyticsDashboardModal';
 import { AnalyticsTracker } from './lib/analyticsTracker';
 import { initTwclidCapture, trackXPageView, trackXWhatsAppPurchase } from './lib/xPixel';
+import { trackTikTokPageView } from './lib/tiktokPixel';
 import { LiveSalesNotification } from './components/LiveSalesNotification';
 import { PromoContentProvider } from './context/PromoContentContext';
 import { PricingPlan, LeadData } from './types';
@@ -136,9 +137,16 @@ export default function App() {
     };
   }, []);
 
-  // Enviar evento PageView a X en cada visita / cambio de página SPA
+  const isInitialTikTokLoad = useRef(true);
+
+  // Enviar evento PageView a X y TikTok en cada visita / cambio de página SPA
   useEffect(() => {
     trackXPageView(currentView);
+    if (isInitialTikTokLoad.current) {
+      isInitialTikTokLoad.current = false;
+    } else {
+      trackTikTokPageView(currentView);
+    }
   }, [currentView]);
 
   // Detección de ruta secreta /autoadmin para acceder al panel de administración
